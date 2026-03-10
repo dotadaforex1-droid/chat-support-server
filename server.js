@@ -14,9 +14,11 @@ const messageRoutes = require('./routes/messages');
 
 const app = express();
 const server = http.createServer(app);
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ["http://localhost:3000", "http://localhost:3001"];
+
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:3000", "http://localhost:3001"],
+        origin: allowedOrigins,
         methods: ["GET", "POST", "PATCH"],
         credentials: true
     }
@@ -24,7 +26,7 @@ const io = new Server(server, {
 
 // Middleware
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(express.json());
