@@ -12,7 +12,7 @@ const socketManager = (io) => {
         });
 
         socket.on('send_message', async (data) => {
-            const { ticketId, senderId, senderRole, message, attachments } = data;
+            const { ticketId, senderId, senderRole, message, attachments, tempId } = data;
 
             const newMessage = new Message({
                 ticketId,
@@ -31,8 +31,9 @@ const socketManager = (io) => {
             ticket.unreadCount[otherRole] += 1;
             await ticket.save();
 
-            // Broadcast to the room
-            io.to(ticketId).emit('receive_message', newMessage);
+            // Broadcast to the room, including the tempId so the sender can match it
+            io.to(ticketId).emit('receive_message', { ...newMessage.toObject(), tempId });
+
 
             // If it's an agent, also emit update to the ticket list for all agents
             if (senderRole === 'agent') {
@@ -40,8 +41,8 @@ const socketManager = (io) => {
             }
         });
 
-        socket.on('typing', ({ ticketId, userName, isTyping }) => {
-            socket.to(ticketId).emit('user_typing', { userName, isTyping });
+        socket.on('typing', ({ ticketId, userName, senderRole, isTyping }) => {
+            socket.to(ticketId).emit('user_typing', { userName, senderRole, isTyping });
         });
 
         socket.on('disconnect', () => {
